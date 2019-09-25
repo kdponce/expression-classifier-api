@@ -1,8 +1,8 @@
 from keras.preprocessing.image import ImageDataGenerator
-from keras.optimizers import SGD
-from keras.callbacks import ModelCheckpoint
+from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.models import load_model
 from sklearn.utils import class_weight
-from model import mobilenet
+from model import customcnn
 import numpy as np
 import tensorflow as tf
 
@@ -19,25 +19,21 @@ def build_model():
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
 
-    model = mobilenet()
-
-    for layer in model.layers[:73]:
-        layer.trainable = False
-
-    model.compile(optimizer=SGD(lr=learning_rate, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
+    model = customcnn()
+    model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
     train_datagen = ImageDataGenerator(rescale=1. / 255)
     valid_datagen = ImageDataGenerator(rescale=1. / 255)
 
     train_generator = train_datagen.flow_from_directory('lib/data/Training',
-                                                        target_size=(224, 224),
+                                                        target_size=(48, 48),
                                                         color_mode='rgb',
                                                         batch_size=batch_size,
                                                         class_mode='categorical',
                                                         shuffle=True)
 
     validation_generator = valid_datagen.flow_from_directory('lib/data/Validation',
-                                                             target_size=(224, 224),
+                                                             target_size=(48, 48),
                                                              color_mode='rgb',
                                                              batch_size=batch_size,
                                                              class_mode='categorical',
@@ -53,7 +49,7 @@ def build_model():
     )
 
     # Save model after every epoch with improvements in val_loss
-    mc_fit = ModelCheckpoint('lib/checkpoints/mobilenet_fit_best.hdf5',
+    mc_fit = ModelCheckpoint('lib/checkpoints/model_fit_best.hdf5',
                              monitor='val_loss',
                              verbose=1,
                              save_best_only=True,
@@ -61,32 +57,24 @@ def build_model():
                              mode='auto',
                              period=1)
 
+    early_stop = EarlyStopping(monitor='val_loss',
+                               patience=3,
+                               verbose=1,
+                               mode='auto',
+                               restore_best_weights=True)
+
     # Train model
     history = model.fit_generator(generator=train_generator,
                                   steps_per_epoch=step_size_train,
                                   validation_data=validation_generator,
                                   validation_steps=step_size_valid,
-                                  callbacks=[mc_fit],
+                                  callbacks=[mc_fit, early_stop],
                                   epochs=epochs,
                                   class_weight=class_weights)
 
-    model.save('lib/models/mobilenet.h5')
-
-    print('Model Accuracy')
-    for i in history.history['acc']:
-        print(i)
-
-    print('Validation Accuracy')
-    for i in history.history['val_acc']:
-        print(i)
-
-    print('Model Loss')
-    for i in history.history['loss']:
-        print(i)
-
-    print('Validation Loss')
-    for i in history.history['val_loss']:
-        print(i)
+    model.save('lib/models/model.h5')
+    return model
 
 
-build_model()
+def load_model():
+    return load_model('lib/models/model.h5')

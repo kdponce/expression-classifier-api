@@ -1,14 +1,16 @@
-from keras.applications.mobilenet_v2 import MobileNetV2
-from keras.layers import GlobalAveragePooling2D, Dense
-from keras.models import Model
+from keras.layers import Conv2D, AveragePooling2D, Dropout, Flatten, Dense
+from keras.models import Sequential
 
 
-def mobilenet():
-    base_model = MobileNetV2(include_top=False, weights='imagenet')
-
-    # Add top
-    x = base_model.output
-    x = GlobalAveragePooling2D()(x)
-    preds = Dense(units=7, activation='softmax')(x)
-    model = Model(inputs=base_model.input, outputs=preds)
+def customcnn():
+    model = Sequential()
+    model.add(Conv2D(32, kernel_size=2, activation='relu', input_shape=(48, 48, 3)))
+    model.add(Conv2D(64, kernel_size=2, activation='relu'))
+    model.add(Conv2D(128, kernel_size=2, activation='relu'))
+    model.add(AveragePooling2D(pool_size=2))
+    model.add(Dropout(0.5))
+    model.add(Flatten())
+    model.add(Dense(128, activation='relu'))
+    model.add(Dropout(0.5))
+    model.add(Dense(7, activation='softmax'))
     return model
