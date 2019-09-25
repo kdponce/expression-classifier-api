@@ -1,5 +1,6 @@
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping
+from keras.models import load_model
 from sklearn.utils import class_weight
 from model import customcnn
 import numpy as np
@@ -72,22 +73,8 @@ def build_model():
                                   class_weight=class_weights)
 
     model.save('lib/models/model.h5')
-
-    print('Model Accuracy')
-    for i in history.history['acc']:
-        print(i)
-
-    print('Validation Accuracy')
-    for i in history.history['val_acc']:
-        print(i)
-
-    print('Model Loss')
-    for i in history.history['loss']:
-        print(i)
-
-    print('Validation Loss')
-    for i in history.history['val_loss']:
-        print(i)
+    return model
 
 
-build_model()
+def load_model():
+    return load_model('lib/models/model.h5')
