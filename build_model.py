@@ -21,7 +21,7 @@ def build_model():
 
     model = mobilenet()
 
-    for layer in model.layers[:73]:
+    for layer in model.layers[:117]:
         layer.trainable = False
 
     model.compile(optimizer=SGD(lr=learning_rate, momentum=0.9), loss='categorical_crossentropy', metrics=['accuracy'])
