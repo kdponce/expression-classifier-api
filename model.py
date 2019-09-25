@@ -4,7 +4,7 @@ from keras.models import Sequential
 
 def customcnn():
     model = Sequential()
-    model.add(Conv2D(32, kernel_size=2, activation='relu', input_shape=(48, 48, 3)))
+    model.add(Conv2D(32, kernel_size=2, activation='relu', input_shape=(48, 48, 1)))
     model.add(Conv2D(64, kernel_size=2, activation='relu'))
     model.add(Conv2D(128, kernel_size=2, activation='relu'))
     model.add(AveragePooling2D(pool_size=2))

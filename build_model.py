@@ -1,23 +1,35 @@
 from keras.preprocessing.image import ImageDataGenerator
 from keras.callbacks import ModelCheckpoint, EarlyStopping
-from keras.models import load_model
 from sklearn.utils import class_weight
 from model import customcnn
 import numpy as np
 import tensorflow as tf
-
-# Constants
-learning_rate = 0.001
-epochs = 20
-batch_size = 32
+import wget
+import os
 
 
 def build_model():
+    model = customcnn()
+    if not os.path.exists('lib/models/expression_classifier_weights.hdf5'):
+        # Downloads weights file from releases
+        url = 'https://github.com/kdponce/expression-classifier-api/releases/download/v0.1.0/expression_classifier_weights.hdf5'
+        print('Downloading weights from {}'.format(url))
+        wget.download(url, 'lib/models/expression_classifier_weights.hdf5')
+    model.load_weights('lib/models/expression_classifier_weights.hdf5')
+    return model
+
+
+def train_model():
     # Only allocates a subset of the available GPU Memory and take more as needed.
     # Prevents "Failed to get convolution algorithm" error on Elementary OS Juno.
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
     sess = tf.Session(config=config)
+
+    # Constants
+    learning_rate = 0.001
+    epochs = 20
+    batch_size = 32
 
     model = customcnn()
     model.compile(optimizer='Adam', loss='categorical_crossentropy', metrics=['accuracy'])
@@ -27,14 +39,14 @@ def build_model():
 
     train_generator = train_datagen.flow_from_directory('lib/data/Training',
                                                         target_size=(48, 48),
-                                                        color_mode='rgb',
+                                                        color_mode='grayscale',
                                                         batch_size=batch_size,
                                                         class_mode='categorical',
                                                         shuffle=True)
 
     validation_generator = valid_datagen.flow_from_directory('lib/data/Validation',
                                                              target_size=(48, 48),
-                                                             color_mode='rgb',
+                                                             color_mode='grayscale',
                                                              batch_size=batch_size,
                                                              class_mode='categorical',
                                                              shuffle=False)
@@ -64,17 +76,13 @@ def build_model():
                                restore_best_weights=True)
 
     # Train model
-    history = model.fit_generator(generator=train_generator,
-                                  steps_per_epoch=step_size_train,
-                                  validation_data=validation_generator,
-                                  validation_steps=step_size_valid,
-                                  callbacks=[mc_fit, early_stop],
-                                  epochs=epochs,
-                                  class_weight=class_weights)
+    model.fit_generator(generator=train_generator,
+                        steps_per_epoch=step_size_train,
+                        validation_data=validation_generator,
+                        validation_steps=step_size_valid,
+                        callbacks=[mc_fit, early_stop],
+                        epochs=epochs,
+                        class_weight=class_weights)
 
     model.save('lib/models/model.h5')
     return model
-
-
-def load_model():
-    return load_model('lib/models/model.h5')
