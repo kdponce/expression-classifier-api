@@ -2,6 +2,7 @@ from keras.layers import Conv2D, AveragePooling2D, Dropout, Flatten, Dense
 from keras.models import Sequential
 
 
+# Convolutional neural network for image classification
 def customcnn():
     model = Sequential()
     model.add(Conv2D(32, kernel_size=2, activation='relu', input_shape=(48, 48, 1)))

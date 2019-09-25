@@ -1,8 +1,8 @@
 from flask import Flask
 from flask_restful import reqparse, Api, Resource
 from build_model import build_model
-import numpy as np
 from PIL import Image
+import numpy as np
 import tensorflow as tf
 import cv2
 import werkzeug
@@ -19,11 +19,18 @@ model = build_model()
 
 # Performs the main classification task
 class PredictExpression(Resource):
+    def get(self):
+        return 'Facial expression classifier. Test with \'curl -F \'file=@photo.jpg/png\' localhost:5000'
+
     def post(self):
-        # argument parsing
+        # Argument parsing
         parser = reqparse.RequestParser()
         parser.add_argument('file', type=werkzeug.datastructures.FileStorage, location='files')
         args = parser.parse_args()
+
+        # Terminates with warning if no image has been detected.
+        if args['file'] is None:
+            return 'Invalid syntax. Try again with \'curl -F \'file=@photo.jpg/png\' localhost:5000'
 
         # Convert image input to 48*48 grayscale
         img = np.asarray(Image.open(args['file']))[:, :, ::-1]
@@ -36,14 +43,15 @@ class PredictExpression(Resource):
 
         # Only allocates a subset of the available GPU Memory and take more as needed.
         # Prevents "Failed to get convolution algorithm" error on Elementary OS Juno.
-        config = tf.ConfigProto()
-        config.gpu_options.allow_growth = True
-        sess = tf.Session(config=config)
+        # Use only in conjunction with keras-gpu
+        # config = tf.ConfigProto()
+        # config.gpu_options.allow_growth = True
+        # sess = tf.Session(config=config)
 
         # Predict
         preds = model.predict(img)
 
-        # Store results in JSON format
+        # Return results in JSON format
         results = dict()
         results['class'] = classes[np.argmax(preds)]
         results['certainty'] = str(preds[0][np.argmax(preds)])
