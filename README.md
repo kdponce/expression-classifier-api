@@ -1,13 +1,13 @@
 Facial Expression Classifier API
 ---
-This API utilizes a Convolutional Neural Network to classify facial expressions from an image.
+This API utilizes a Convolutional Neural Network to classify facial expressions (Angry, Disgust, Fear, Happy, Neutral, Sad, Surprise) from an image.
 
 Tested on Elementary OS Juno.
 
 How to install:
 1. install Anaconda or Miniconda if you haven't yet.
-2. clone and checkout the latest release by entering: git clone https://github.com/kdponce/expression-classifier-api.git -b v1.0.0
-1. cd to the project directory and recreate the conda environment using: conda env create -f environment.yml
+2. clone and checkout the latest release by entering: git clone https://github.com/kdponce/expression-classifier-api.git -b v1.0.1
+3. cd to the project directory and recreate the conda environment using: conda env create -f environment.yml
 
 How to run:
 1. activate the environment with 'conda activate expression-classifier-api-nogpu' and run app.py
